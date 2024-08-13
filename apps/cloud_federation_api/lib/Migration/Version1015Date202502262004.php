@@ -11,10 +11,11 @@ namespace OCA\CloudFederationAPI\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
+use OCP\DB\Types;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
-class Version0001Date202502262004 extends SimpleMigrationStep
+class Version1015Date202502262004 extends SimpleMigrationStep
 {
 
 	/**
@@ -34,42 +35,55 @@ class Version0001Date202502262004 extends SimpleMigrationStep
 		if (! $schema->hasTable($table_name)) {
 
 			$table = $schema->createTable($table_name);
-			$table->addColumn('id', 'bigint', [
+			$table->addColumn('id', Types::BIGINT, [
 				'autoincrement' => true,
 				'notnull' => true,
-				'length' => 20,
+				'length' => 11,
 				'unsigned' => true,
 			]);
 
-			$table->addColumn('user_id', 'bigint', [
+			$table->addColumn('user_id', Types::STRING, [
 				'notnull' => false,
-				'length' => 20,
-				'unsigned' => true,
+				'length' => 64,
 
 			]);
 
-
-			$table->addColumn('token', 'string', [
+			// https://saturncloud.io/blog/what-is-the-maximum-length-of-a-url-in-different-browsers/#maximum-url-length-in-different-browsers
+			// We use the least common denominator, the minimum length supported by browsers
+			$table->addColumn('recipient_provider', Types::STRING, [
+				'notnull' => true,
+				'length' => 2083,
+			]);
+			$table->addColumn('recipient_user_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 1024,
+			]);
+			$table->addColumn('recipient_name', Types::STRING, [
+				'notnull' => true,
+				'length' => 1024,
+			]);
+			$table->addColumn('token', Types::STRING, [
 				'notnull' => true,
 				'length' => 60,
 			]);
-			$table->addColumn('email', 'string', [
+			// https://www.directedignorance.com/blog/maximum-length-of-email-address
+			$table->addColumn('email', Types::STRING, [
 				'notnull' => true,
-				'length' => 256,
+				'length' => 320,
 			]);
-			$table->addColumn('accepted', 'boolean', [
+			$table->addColumn('accepted', Types::BOOLEAN, [
 				'notnull' => false,
 				'default' => false
 			]);
-			$table->addColumn('createdAt', 'datetime', [
+			$table->addColumn('createdAt', Types::DATETIME, [
 				'notnull' => true,
 			]);
 
-			$table->addColumn('expiredAt', 'datetime', [
+			$table->addColumn('expiredAt', Types::DATETIME, [
 				'notnull' => false,
 			]);
 
-			$table->addColumn('acceptedAt', 'datetime', [
+			$table->addColumn('acceptedAt', Types::DATETIME, [
 				'notnull' => false,
 			]);
 
