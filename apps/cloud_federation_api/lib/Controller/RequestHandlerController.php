@@ -36,7 +36,6 @@ use OCP\Federation\ICloudFederationFactory;
 use OCP\Federation\ICloudFederationProviderManager;
 use OCP\Federation\ICloudIdManager;
 use OCP\IAppConfig;
-use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -73,7 +72,6 @@ class RequestHandlerController extends Controller {
 		private ICloudIdManager $cloudIdManager,
 		private readonly ISignatureManager $signatureManager,
 		private readonly OCMSignatoryManager $signatoryManager,
-		private IConfig $ocConfig,
 		private TrustedServers $trustedServers
 	) {
 		parent::__construct($appName, $request);
@@ -247,15 +245,19 @@ class RequestHandlerController extends Controller {
 	#[BruteForceProtection(action: 'inviteAccepted')]
 	public function inviteAccepted(string $recipientProvider, string $token, string $userId, string $email, string $name): JSONResponse {
 		$this->logger->debug('Invite accepted for ' . $userId . ' with token ' . $token . ' and email ' . $email . ' and name ' . $name);
+
+		/** @var IQueryBuilder $qb */
+		$qb = $this->db->getQueryBuilder();
+		$qb->select('*')
+			->from('federated_invites')
+			->where($qb->expr()->eq('token', $qb->createNamedParameter($token)));
+		$result = $qb->executeQuery();
+		$data = $result->fetch();
+		$result->closeCursor();
 		$found_for_this_user = false;
-		foreach ($this->ocConfig->getAppKeys($this->appName) as $key) {
-			if(str_starts_with($key, $token) ){
-				$found_for_this_user = $this->getAppValue($this->appName, $token . '_remote_id') === $userId;
-			}
+		if ($data) {
+			$found_for_this_user = $data['user_id'] === $userId;
 		}
-
-
-
 		if (!$found_for_this_user) {
 			$response = ['message' => 'Invalid or non existing token', 'error' => true];
 			$status = Http::STATUS_BAD_REQUEST;
@@ -269,23 +271,23 @@ class RequestHandlerController extends Controller {
 		}
 		// Note: Not implementing 404 Invitation token does not exist, instead using 400
 
-		if ($this->ocConfig->getAppValue($this->appName, $token . '_accepted') === true ) {
+		if ($data['accepted'] === true ) {
 			$response = ['message' => 'Invite already accepted', 'error' => true];
 			$status = Http::STATUS_CONFLICT;
 			return new JSONResponse($response,$status);
 		}
 
 
-		$localId = $this->ocConfig->getAppValue($this->appName, $token . '_local_id');
-		$response = ['usedID' => $localId, 'email' => $email, 'name' => $name];
+		$localId = $data['user_id'];
+		$response = ['userID' => $localId, 'email' => $email, 'name' => $name];
 		$status = Http::STATUS_OK;
 		$updated = new DateTime("now");
-		/** @var IQueryBuilder $qb */
-		$qb = $this->db->getQueryBuilder();
 		$qb->update('federated_invites f')
 			->set('f.accepted', $qb->createNamedParameter(true))
 			->set('f.acceptedAt', $qb->createNamedParameter($updated))
 			->where($qb->expr()->eq('token', $qb->createNamedParameter($token)));
+		$result = $qb->executeQuery();
+		$result->closeCursor();
 
 		return new JSONResponse($response,$status);
 	}
