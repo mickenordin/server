@@ -41,13 +41,15 @@ class Version0001Date202502262004 extends SimpleMigrationStep
 				'unsigned' => true,
 			]);
 
-			$table->addColumn('user_id', 'bigint', [
-				'notnull' => false,
-				'length' => 20,
-				'unsigned' => true,
-
+			$table->addColumn('user_id', 'string', [
+				'notnull' => true,
+				'length' => 60,
 			]);
 
+			$table->addColumn('remote_ocm_address', 'string', [
+				'notnull' => true,
+				'length' => 60,
+			]);
 
 			$table->addColumn('token', 'string', [
 				'notnull' => true,

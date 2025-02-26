@@ -278,8 +278,7 @@ class RequestHandlerController extends Controller {
 		}
 
 
-		$localId = $data['user_id'];
-		$response = ['userID' => $localId, 'email' => $email, 'name' => $name];
+		$response = ['userID' => $userId, 'email' => $email, 'name' => $name];
 		$status = Http::STATUS_OK;
 		$updated = new DateTime("now");
 		$qb->update('federated_invites f')
