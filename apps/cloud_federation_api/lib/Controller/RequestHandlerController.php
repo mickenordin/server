@@ -5,6 +5,7 @@
  */
 namespace OCA\CloudFederationAPI\Controller;
 
+use DateTime;
 use NCU\Federation\ISignedCloudFederationProvider;
 use NCU\Security\Signature\Exceptions\IdentityNotFoundException;
 use NCU\Security\Signature\Exceptions\IncomingRequestException;
@@ -25,6 +26,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\Attribute\OpenAPI;
 use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\AppFramework\Http\JSONResponse;
+use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\Federation\Exceptions\ActionNotSupportedException;
 use OCP\Federation\Exceptions\AuthenticationFailedException;
 use OCP\Federation\Exceptions\BadRequestException;
@@ -35,6 +37,7 @@ use OCP\Federation\ICloudFederationProviderManager;
 use OCP\Federation\ICloudIdManager;
 use OCP\IAppConfig;
 use OCP\IConfig;
+use OCP\IDBConnection;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IURLGenerator;
@@ -63,6 +66,7 @@ class RequestHandlerController extends Controller {
 		private IURLGenerator $urlGenerator,
 		private ICloudFederationProviderManager $cloudFederationProviderManager,
 		private Config $config,
+		private IDBConnection $db,
 		private readonly AddressHandler $addressHandler,
 		private readonly IAppConfig $appConfig,
 		private ICloudFederationFactory $factory,
@@ -275,11 +279,13 @@ class RequestHandlerController extends Controller {
 		$localId = $this->ocConfig->getAppValue($this->appName, $token . '_local_id');
 		$response = ['usedID' => $localId, 'email' => $email, 'name' => $name];
 		$status = Http::STATUS_OK;
-		$this->ocConfig->setAppValue($this->appName, $token . '_accepted', true);
-		//  TODO: Set these values where the invitation workflow is implemented
-		//  $this->ocConfig->setAppValue($this->appName, $token . '_accepted', false);
-		//	$this->ocConfig->setAppValue($this->appName, $token . '_local_id', $localId);
-		//	$this->ocConfig->setAppValue($this->appName, $token . '_remote_id', $remoteId);
+		$updated = new DateTime("now");
+		/** @var IQueryBuilder $qb */
+		$qb = $this->db->getQueryBuilder();
+		$qb->update('federated_invites f')
+			->set('f.accepted', $qb->createNamedParameter(true))
+			->set('f.acceptedAt', $qb->createNamedParameter($updated))
+			->where($qb->expr()->eq('token', $qb->createNamedParameter($token)));
 
 		return new JSONResponse($response,$status);
 	}
