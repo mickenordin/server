@@ -256,14 +256,13 @@ class RequestHandlerController extends Controller {
 		$result->closeCursor();
 		$found_for_this_user = false;
 		if ($data) {
-			$found_for_this_user = $data['user_id'] === $userId;
+			$found_for_this_user = $data['recipient_user_id'] === $userId && isset($data['user_id']);
 		}
 		if (!$found_for_this_user) {
 			$response = ['message' => 'Invalid or non existing token', 'error' => true];
 			$status = Http::STATUS_BAD_REQUEST;
 			return new JSONResponse($response,$status);
 		}
-
 		if(!$this->trustedServers->isTrustedServer($recipientProvider)) {
 			$response = ['message' => 'Remote server not trusted', 'error' => true];
 			$status = Http::STATUS_FORBIDDEN;
@@ -277,13 +276,20 @@ class RequestHandlerController extends Controller {
 			return new JSONResponse($response,$status);
 		}
 
+		$localUser = $this->userManager->get($data['user_id']);
+		$sharedFromEmail = $localUser->getPrimaryEMailAddress();
+		$sharedFromDisplayName = $localUser->getDisplayName();
 
-		$response = ['userID' => $userId, 'email' => $email, 'name' => $name];
+		$response = ['userID' => $data['user_id'], 'email' => $sharedFromEmail, 'name' => $sharedFromDisplayName];
 		$status = Http::STATUS_OK;
 		$updated = new DateTime("now");
 		$qb->update('federated_invites f')
 			->set('f.accepted', $qb->createNamedParameter(true))
 			->set('f.acceptedAt', $qb->createNamedParameter($updated))
+			->set('f.recipient_email', $qb->createNamedParameter($email))
+			->set('f.recipient_name', $qb->createNamedParameter($name))
+			->set('f.recipient_user_id', $qb->createNamedParameter($userId))
+			->set('f.recipient_provider', $qb->createNamedParameter($recipientProvider))
 			->where($qb->expr()->eq('token', $qb->createNamedParameter($token)));
 		$result = $qb->executeQuery();
 		$result->closeCursor();

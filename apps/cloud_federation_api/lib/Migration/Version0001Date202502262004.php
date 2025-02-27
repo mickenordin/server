@@ -11,6 +11,7 @@ namespace OCA\CloudFederationAPI\Migration;
 
 use Closure;
 use OCP\DB\ISchemaWrapper;
+use OCP\DB\Types;
 use OCP\Migration\IOutput;
 use OCP\Migration\SimpleMigrationStep;
 
@@ -34,30 +35,41 @@ class Version0001Date202502262004 extends SimpleMigrationStep
 		if (! $schema->hasTable($table_name)) {
 
 			$table = $schema->createTable($table_name);
-			$table->addColumn('id', 'bigint', [
+			$table->addColumn('id', Types::BIGINT, [
 				'autoincrement' => true,
 				'notnull' => true,
-				'length' => 20,
+				'length' => 11,
 				'unsigned' => true,
 			]);
 
-			$table->addColumn('user_id', 'string', [
-				'notnull' => true,
-				'length' => 60,
+			$table->addColumn('user_id', Types::STRING, [
+				'notnull' => false,
+				'length' => 64,
+
 			]);
 
-			$table->addColumn('remote_ocm_address', 'string', [
+			// https://saturncloud.io/blog/what-is-the-maximum-length-of-a-url-in-different-browsers/#maximum-url-length-in-different-browsers
+			// We use the least common denominator, the minimum length supported by browsers
+			$table->addColumn('recipient_provider', Types::STRING, [
+				'notnull' => true,
+				'length' => 2083,
+			]);
+			$table->addColumn('recipient_user_id', Types::STRING, [
+				'notnull' => true,
+				'length' => 1024,
+			]);
+			$table->addColumn('recipient_name', Types::STRING, [
+				'notnull' => true,
+				'length' => 1024,
+			]);
+			$table->addColumn('token', Types::STRING, [
 				'notnull' => true,
 				'length' => 60,
 			]);
-
-			$table->addColumn('token', 'string', [
+			// https://www.directedignorance.com/blog/maximum-length-of-email-address
+			$table->addColumn('email', Types::STRING, [
 				'notnull' => true,
-				'length' => 60,
-			]);
-			$table->addColumn('email', 'string', [
-				'notnull' => true,
-				'length' => 256,
+				'length' => 320,
 			]);
 			$table->addColumn('accepted', 'boolean', [
 				'notnull' => false,
