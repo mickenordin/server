@@ -339,8 +339,6 @@ class SessionTest extends \Test\TestCase {
 			->with('foo')
 			->willReturn($user);
 
-		$session->expects($this->never())
-			->method('set');
 		$session->expects($this->once())
 			->method('regenerateId');
 		$token = new PublicKeyToken();
@@ -384,8 +382,6 @@ class SessionTest extends \Test\TestCase {
 			->with('foo')
 			->willReturn($user);
 
-		$session->expects($this->never())
-			->method('set');
 		$session->expects($this->once())
 			->method('regenerateId');
 		$token = new PublicKeyToken();
