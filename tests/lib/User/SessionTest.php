@@ -342,6 +342,7 @@ class SessionTest extends \Test\TestCase {
 		$session->expects($this->once())
 			->method('regenerateId');
 		$token = new PublicKeyToken();
+		$token->setId(1);
 		$token->setLoginName('foo');
 		$token->setLastCheck(0); // Never
 		$token->setUid('foo');
@@ -385,6 +386,7 @@ class SessionTest extends \Test\TestCase {
 		$session->expects($this->once())
 			->method('regenerateId');
 		$token = new PublicKeyToken();
+		$token->setId(1);
 		$token->setLoginName('foo');
 		$token->setLastCheck(0); // Never
 		$token->setUid('foo');
