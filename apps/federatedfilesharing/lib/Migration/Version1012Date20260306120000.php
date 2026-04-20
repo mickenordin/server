@@ -10,9 +10,9 @@ declare(strict_types=1);
 namespace OCA\FederatedFileSharing\Migration;
 
 use Closure;
-use OC\Authentication\Token\IToken;
 use OC\Authentication\Token\PublicKeyTokenProvider;
 use OCP\Authentication\Exceptions\InvalidTokenException;
+use OCP\Authentication\Token\IToken;
 use OCP\DB\ISchemaWrapper;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IDBConnection;
