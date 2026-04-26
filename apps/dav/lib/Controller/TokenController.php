@@ -166,7 +166,7 @@ class TokenController extends ApiController {
 				$token->getUID(),
 				$token->getLoginName(),
 				null, // No password for access tokens
-				'OCM Access Token',
+				IToken::OCM_ACCESS_TOKEN_NAME,
 				IToken::TEMPORARY_TOKEN,
 				IToken::DO_NOT_REMEMBER
 			);
