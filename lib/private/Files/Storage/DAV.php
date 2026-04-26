@@ -265,7 +265,7 @@ class DAV extends Common {
 	 */
 	protected function exchangeRefreshToken(): string {
 		try {
-			$host = 'https://' . $this->host;
+			$host = ($this->secure ? 'https://' : 'http://') . $this->host;
 			$ocmProvider = $this->discoveryService->discover($host);
 			$tokenEndpoint = $ocmProvider->getTokenEndPoint();
 
